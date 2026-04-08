@@ -1,0 +1,20 @@
+.{
+    .name = .gme,
+    .fingerprint = 0x5f52848a6f2f6c11,
+    .version = "0.6.4",
+    .minimum_zig_version = "0.15.2",
+    .dependencies = .{
+        .gme = .{
+            .url = "https://github.com/libgme/game-music-emu/archive/refs/tags/0.6.4.tar.gz",
+            .hash = "N-V-__8AAI7JEQAlAeMvqe7Pe1QybtsPnFgGFSRZzL_9fGZh",
+        },
+        .zlib = .{
+            .url = "https://github.com/allyourcodebase/zlib/archive/c5115f4b69ef660f72a835c6638f80508ef284c7.tar.gz",
+            .hash = "zlib-1.3.1-1-ZZQ7ldENAAA7qJjUXP6E6xnRuV-jDL9dyoJFc_eb3zQ6",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+    },
+}
