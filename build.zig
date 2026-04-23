@@ -4,6 +4,8 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    const link_mode = b.option(std.builtin.LinkMode, "link-mode", "Linking mode for the libraries") orelse
+        .static;
     const pic = b.option(bool, "pic", "Produce Position Independent Code");
     const enable_zlib = b.option(bool, "enable-zlib", "Enable zlib file decompression support") orelse true;
 
@@ -11,7 +13,7 @@ pub fn build(b: *std.Build) void {
 
     const lib = b.addLibrary(.{
         .name = "gme",
-        .linkage = .static,
+        .linkage = link_mode,
         .root_module = b.createModule(.{
             .target = target,
             .optimize = optimize,
@@ -21,16 +23,13 @@ pub fn build(b: *std.Build) void {
         }),
     });
 
-    const cflags_little = [_][]const u8{
+    const base_cflags = [_][]const u8{
         "-DVGM_YM2612_NUKED",
-        "-DBLARGG_LITTLE_ENDIAN=1",
     };
-    const cflags_big = [_][]const u8{
-        "-DVGM_YM2612_NUKED",
-        "-DBLARGG_BIG_ENDIAN=1",
-    };
-    const cflags = if (target.result.cpu.arch.endian() == .little) &cflags_little else &cflags_big;
-
+    switch (target.result.cpu.arch.endian()) {
+        .little => lib.root_module.addCMacro("BLARGG_LITTLE_ENDIAN", "1"),
+        .big => lib.root_module.addCMacro("BLARGG_BIG_ENDIAN", "1"),
+    }
     if (enable_zlib) {
         const maybe_dep_zlib = b.lazyDependency("zlib", .{
             .target = target,
@@ -97,7 +96,7 @@ pub fn build(b: *std.Build) void {
             "Ym2612_Nuked.cpp",
             "gme.cpp",
         },
-        .flags = cflags,
+        .flags = &base_cflags,
         .language = .cpp,
     });
     lib.root_module.addCSourceFiles(.{
@@ -106,7 +105,7 @@ pub fn build(b: *std.Build) void {
             "emu2413.c",
             "panning.c",
         },
-        .flags = cflags,
+        .flags = &base_cflags,
     });
 
     lib.root_module.addIncludePath(upstream.path("gme"));

@@ -20,6 +20,10 @@ pub fn build(b: *std.Build) !void {
     const dep_gme = b.dependency("gme", .{
         .target = target,
         .optimize = optimize,
+        // force linking mode (default is static)
+        // .@"link-mode" = .dynamic,
+        // force enable or disable Position Independent Code (PIC) 
+        // .pic = true,
         // disable zlib file decompression support (it's enabled by default)
         // .@"enable-zlib" = false,
     });
