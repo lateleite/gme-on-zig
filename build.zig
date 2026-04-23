@@ -5,14 +5,9 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     const pic = b.option(bool, "pic", "Produce Position Independent Code");
+    const enable_zlib = b.option(bool, "enable-zlib", "Enable zlib file decompression support") orelse true;
 
     const upstream = b.dependency("gme", .{});
-
-    const dep_zlib = b.dependency("zlib", .{
-        .target = target,
-        .optimize = optimize,
-    });
-    const lib_zlib = dep_zlib.artifact("z");
 
     const lib = b.addLibrary(.{
         .name = "gme",
@@ -29,14 +24,24 @@ pub fn build(b: *std.Build) void {
     const cflags_little = [_][]const u8{
         "-DVGM_YM2612_NUKED",
         "-DBLARGG_LITTLE_ENDIAN=1",
-        "-DHAVE_ZLIB_H",
     };
     const cflags_big = [_][]const u8{
         "-DVGM_YM2612_NUKED",
         "-DBLARGG_BIG_ENDIAN=1",
-        "-DHAVE_ZLIB_H",
     };
     const cflags = if (target.result.cpu.arch.endian() == .little) &cflags_little else &cflags_big;
+
+    if (enable_zlib) {
+        const maybe_dep_zlib = b.lazyDependency("zlib", .{
+            .target = target,
+            .optimize = optimize,
+        });
+        if (maybe_dep_zlib) |dep_zlib| {
+            const lib_zlib = dep_zlib.artifact("z");
+            lib.root_module.linkLibrary(lib_zlib);
+            lib.root_module.addCMacro("HAVE_ZLIB_H", "1");
+        }
+    }
 
     lib.root_module.addCSourceFiles(.{
         .root = upstream.path("gme"),
@@ -103,8 +108,6 @@ pub fn build(b: *std.Build) void {
         },
         .flags = cflags,
     });
-
-    lib.root_module.linkLibrary(lib_zlib);
 
     lib.root_module.addIncludePath(upstream.path("gme"));
 

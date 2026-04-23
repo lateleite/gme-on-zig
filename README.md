@@ -20,6 +20,8 @@ pub fn build(b: *std.Build) !void {
     const dep_gme = b.dependency("gme", .{
         .target = target,
         .optimize = optimize,
+        // disable zlib file decompression support (it's enabled by default)
+        // .@"enable-zlib" = false,
     });
     const lib_gme = dep_gme.artifact("gme");
 
